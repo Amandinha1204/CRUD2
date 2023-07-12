@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <link href='https://unpkg.com/boxicons@2.1.1/css/boxicons.min.css' rel='stylesheet'>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Gestão de Produtos</h1>
+            <button onclick="openModal()" id="new">Cadastrar</i></button>
+        </div>
+
+        <div class="divTable">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Categoria</th>
+                        <th>Nome</th>
+                        <th>Preço</th>
+                        <th>descrição</th>
+                        <th class="acao">Editar</th>
+                        <th class="acao">Excluir</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="modal-container">
+            <div class="modal">
+                <form>
+                    <label for="m-categoria">Categoria</label>
+                    <select id="m-categoria" name="categoria" required >
+                        <option value="">Escolha uma categoria</option>
+                        <option value="Roupa">Roupa</option>
+                        <option value="Comida">Comida</option>
+                        <option value="Artigo Esportivo">Artigo esportivo</option>
+                        <option value="Beleza">Beleza</option>
+                    </select>
+                    
+            
+                    <br><label for="m-nome">Nome</label>
+                    <input id="m-nome" type="text" required />
+            
+                    <label for="m-preco">Preço</label>
+                    <input id="m-preco" type="number" required />
+
+                    <label for="m-descricao">Descrição</label>
+                    <input id="m-descricao" type="text" required />
+
+                    
+                    <button id="btnSalvar">Salvar</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <script>
+     async function minhaFuncao(){
+        const url ="https://649a1d4a79fbe9bcf8404b5a.mockapi.io/users/20201214010021/products";
+
+        fetch(url)
+            .then(response => {
+                if(response.ok) {
+                    return response.json();
+                }else{
+                    throw new Error("Erro na requisição. Codigo: "+ response.status);
+                }
+            })
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => {
+                console.error("Erro na requisição: "+ error.menssage);
+            });
+     }
+
+        const modal = document.querySelector('.modal-container')
+        const tbody = document.querySelector('tbody')
+        const sCategoria = document.querySelector('#m-categoria')
+        const sNome = document.querySelector('#m-nome')
+        const sPreco = document.querySelector('#m-preco')
+        const sDescricao = document.querySelector('#m-descricao')
+        
+        const btnSalvar = document.querySelector('#btnSalvar')
+
+        let itens
+        let id
+
+        const getItensBD = () => JSON.parse(localStorage.getItem('dbfunc')) ?? []
+        const setItensBD = () => localStorage.setItem('dbfunc', JSON.stringify(itens))
+
+        function loadItens() {
+            itens = getItensBD()
+            tbody.innerHTML = ''
+            itens.forEach((item, index) => {
+                insertItem(item, index)
+            })
+
+        }
+
+        loadItens()
+
+        function insertItem(item, index) {
+            let tr = document.createElement('tr')
+
+            tr.innerHTML = `
+                <td> ${item.categoria}</td>
+                <td> ${item.nome}</td>
+                <td>R$ ${item.preco}</td>
+                <td> ${item.descricao}</td>
+                <td class="acao">
+                <button onclick="editItem(${index})"><i class='bx bx-edit' ></i></button>
+                </td>
+                <td class="acao">
+                <button onclick="deleteItem(${index})"><i class='bx bx-trash'></i></button>
+                </td>
+            `
+            tbody.appendChild(tr)
+        }
+
+        function editItem(index) {
+            openModal(true, index)
+        }
+
+        function deleteItem(index) {
+            itens.splice(index, 1)
+            setItensBD()
+            loadItens()
+        }
+
+
+
+        function openModal(edit = false, index = 0) {
+            modal.classList.add('active')
+
+            modal.onclick = e => {
+                if (e.target.className.indexOf('modal-container') !== -1) {
+                modal.classList.remove('active')
+                }
+            }
+
+            if (edit) {
+                sCategoria.value = itens[index].categoria
+                sNome.value = itens[index].nome
+                sPreco.value = itens[index].preco
+                sDescricao.value = itens[index].descricao
+                id = index
+            } else {
+                sCategoria.value = ''
+                sNome.value = ''
+                sPreco.value = ''
+                sDescricao.value = ''
+            }
+        
+        }
+
+        btnSalvar.onclick = e => {
+        
+            if (sCategoria.value == '' ||sNome.value == '' || sPreco.value == '' || sDescricao.value == '') {
+                return
+            }
+
+            e.preventDefault();
+
+            if (id !== undefined) {
+                itens[id].categoria = sCategoria.value
+                itens[id].nome = sNome.value
+                itens[id].preco = sPreco.value
+                itens[id].descricao = sDescricao.value
+            } else {
+                itens.push({'categoria': sCategoria.value,'nome': sNome.value, 'preco': sPreco.value, 'descricao': sDescricao.value})
+            }
+
+            setItensBD()
+
+            modal.classList.remove('active')
+            loadItens()
+            id = undefined
+        }
+
+        
+
+    </script>
+    
+</body>
+</html>
